@@ -1,0 +1,39 @@
+name: Build Android ROM
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Maximize build disk space
+        uses: ublue-os/remove-unwanted-software@v7
+
+      - name: Set up Environment
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git repo curl rsync ccache
+
+      - name: Initialize Repo and Sync
+        run: |
+          mkdir -p ~/bin
+          PATH=~/bin:$PATH
+          curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
+          chmod a+x ~/bin/repo
+          
+          mkdir ~/android/rom
+          cd ~/android/rom
+          
+          git config --global user.name "Luuminakamura"
+          git config --global user.email "seu-email@example.com"
+          
+          repo init -u https://github.com/LineageOS/android.git -b lineage-18.1
+          repo sync -c --no-clone-bundle --no-tags --optimized-fetch --prune --force-sync -j8
+
+      - name: Build ROM
+        run: |
+          echo "Ambiente pronto para inserir device trees e iniciar o build do POCO X3 Pro!"
