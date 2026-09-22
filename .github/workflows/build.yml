@@ -16,7 +16,7 @@ jobs:
       - name: Instalar Dependências de Compilação
         run: |
           sudo apt-get update
-          sudo apt-get install -y bc bisect build-essential ccache curl flex g++-multilib gcc-multilib git gnupg gperf lib32ncurses5-dev lib32z1-dev libm4-dev libncurses5 libncurses5-dev libreadline-dev libsqlite3-dev libssl-dev libxml2 libxml2-utils lzop pngcrush rsync schedtool squashfs-tools xsltproc zip zlib1g-dev unzip
+          sudo apt-get install -y bc build-essential ccache curl flex g++-multilib gcc-multilib git gnupg gperf lib32ncurses5-dev lib32z1-dev libncurses5 libncurses5-dev libreadline-dev libsqlite3-dev libssl-dev libxml2 libxml2-utils lzop pngcrush rsync schedtool squashfs-tools xsltproc zip zlib1g-dev unzip m4
 
       - name: Configurar a Ferramenta Repo
         run: |
