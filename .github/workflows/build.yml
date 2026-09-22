@@ -1,4 +1,4 @@
-name: Compilação de Firmware / ROM
+name: Compilação do Sistema
 
 on:
   push:
@@ -13,6 +13,16 @@ jobs:
       - name: Checkout do Repositório
         uses: actions/checkout@v4
 
+      - name: Libertar Espaço em Disco no Servidor
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /opt/ghc
+          sudo rm -rf "/usr/local/share/boost"
+          sudo apt-get clean
+          echo "Espaço em disco após limpeza:"
+          df -h /
+
       - name: Instalar Dependências de Compilação
         run: |
           sudo apt-get update
@@ -22,9 +32,3 @@ jobs:
             lib32z1-dev libelf-dev libgl1-mesa-dev libxml2 libxml2-utils \
             lzop m4 pngcrush rsync schedtool squashfs-tools xsltproc zip zlib1g-dev \
             python3 python3-pip
-
-      - name: Verificar Instalação
-        run: |
-          m4 --version
-          python3 --version
-          echo "Dependências instaladas com sucesso!"
