@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<manifest>
+
+  <!-- Device Tree para o POCO X3 Pro (vayu) -->
+  <project name="xiaomi-sm8150-devs/android_device_xiaomi_vayu" 
+           path="device/xiaomi/vayu" 
+           remote="github" 
+           branch="lineage-18.1" />
+
+  <!-- Vendor Blobs / Proprietários para o POCO X3 Pro (vayu) -->
+  <project name="xiaomi-sm8150-devs/android_vendor_xiaomi_vayu" 
+           path="vendor/xiaomi/vayu" 
+           remote="github" 
+           branch="lineage-18.1" />
+
+</manifest>
