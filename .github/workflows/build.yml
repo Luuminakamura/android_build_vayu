@@ -1,4 +1,4 @@
-name: Build Android ROM
+name: Build Android ROM - POCO X3 Pro (vayu)
 
 on:
   workflow_dispatch:
@@ -7,33 +7,71 @@ jobs:
   build:
     runs-on: ubuntu-22.04
     steps:
-      - name: Checkout
+      - name: Checkout do Repositório
         uses: actions/checkout@v4
 
-      - name: Maximize build disk space
+      - name: Libertar Espaço em Disco no Servidor
         uses: ublue-os/remove-unwanted-software@v7
 
-      - name: Set up Environment
+      - name: Instalar Dependências de Compilação
         run: |
           sudo apt-get update
-          sudo apt-get install -y git repo curl rsync ccache
+          sudo apt-get install -y bc bisect build-essential ccache curl flex g++-multilib gcc-multilib git gnupg gperf lib32ncurses5-dev lib32z1-dev libm4-dev libncurses5 libncurses5-dev libreadline-dev libsqlite3-dev libssl-dev libxml2 libxml2-utils lzop pngcrush rsync schedtool squashfs-tools xsltproc zip zlib1g-dev unzip
 
-      - name: Initialize Repo and Sync
+      - name: Configurar a Ferramenta Repo
         run: |
           mkdir -p ~/bin
-          PATH=~/bin:$PATH
           curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
           chmod a+x ~/bin/repo
-          
-          mkdir ~/android/rom
-          cd ~/android/rom
-          
+          echo "$HOME/bin" >> $GITHUB_PATH
+
+      - name: Inicializar a Source e Aplicar Manifesto
+        run: |
+          mkdir -p ~/android
+          cd ~/android
           git config --global user.name "Luuminakamura"
           git config --global user.email "seu-email@example.com"
           
-          repo init -u https://github.com/LineageOS/android.git -b lineage-18.1
-          repo sync -c --no-clone-bundle --no-tags --optimized-fetch --prune --force-sync -j8
+          ~/bin/repo init -u https://github.com/LineageOS/android.git -b lineage-18.1 --depth=1
 
-      - name: Build ROM
+          mkdir -p .repo/local_manifests
+          cp $GITHUB_WORKSPACE/.repo/local_manifests/vayu.xml .repo/local_manifests/
+
+      - name: Sincronizar Código-Fonte (Repo Sync)
         run: |
-          echo "Ambiente pronto para inserir device trees e iniciar o build do POCO X3 Pro!"
+          cd ~/android
+          ~/bin/repo sync -c --no-clone-bundle --no-tags --optimized-fetch --prune --force-sync -j$(nproc)
+
+      - name: Extrair e Substituir o Kernel Customizado
+        run: |
+          cd ~/android
+          KERNEL_ZIP=$(ls $GITHUB_WORKSPACE/*.zip 2>/dev/null | head -n 1)
+          if [ -n "$KERNEL_ZIP" ]; then
+            echo "Kernel customizado encontrado: $KERNEL_ZIP"
+            mkdir -p ~/kernel_tmp
+            unzip -o "$KERNEL_ZIP" -d ~/kernel_tmp/
+            
+            mkdir -p device/xiaomi/vayu/prebuilt
+            if [ -f ~/kernel_tmp/Image.gz-dtb ]; then
+              cp -f ~/kernel_tmp/Image.gz-dtb device/xiaomi/vayu/prebuilt/kernel
+              echo "Kernel (Image.gz-dtb) substituído com sucesso!"
+            elif [ -f ~/kernel_tmp/Image.gz ]; then
+              cp -f ~/kernel_tmp/Image.gz device/xiaomi/vayu/prebuilt/kernel
+              echo "Kernel (Image.gz) substituído com sucesso!"
+            fi
+          else
+            echo "Nenhum ficheiro .zip de kernel encontrado."
+          fi
+
+      - name: Compilar a ROM (LineageOS vayu)
+        run: |
+          cd ~/android
+          source build/envsetup.sh
+          lunch lineage_vayu-userdebug
+          m bacon -j$(nproc)
+
+      - name: Guardar Ficheiro da ROM Compilada
+        uses: actions/upload-artifact@v4
+        with:
+          name: LineageOS-18.1-POCO-X3-Pro
+          path: ~/android/out/target/product/vayu/*.zip
